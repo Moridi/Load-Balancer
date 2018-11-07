@@ -1,34 +1,16 @@
 #include "Worker.h"
 
-#include <string>
-#include <sstream>
 #include <fstream>
-#include <iostream>
-#include <algorithm>
 
 using namespace std;
 
-void Worker::set_file_names()
+void Worker::filter(string input_string)
 {
-	string field_name;
-	while((cin >> field_name) && (field_name != "quit"))
-		file_names.push_back(field_name);
-}
-
-void Worker::set_filters()
-{
-	string field_name, field_value;
-	while((cin >> field_name >> field_value) && (field_name != "quit"))
-		filters.push_back(pair<string, string>(field_name, field_value));
-}
-
-void Worker::filter(istringstream input_stream)
-{
+	istringstream input_stream(input_string);
 	string field;
 	vector<string> good_information;
 	while (input_stream >> field)
 		good_information.push_back(field);
-
 
 	bool is_matched = true;
 	for (int filter_index = 0; filter_index < filters.size(); ++filter_index)
@@ -41,11 +23,7 @@ void Worker::filter(istringstream input_stream)
 	}
 
 	if (is_matched)
-	{
-		for (int i = 0; i < good_information.size(); ++i)
-			cout << good_information[i] << "*";
-		cout << endl;
-	}
+		matched_goods.push_back(input_string);
 }
 
 void Worker::read_from_file()
@@ -60,7 +38,7 @@ void Worker::read_from_file()
 		obtain_fields(istringstream(line));
 
 		while (getline(input_file, line))
-			filter(istringstream(line));
+			filter(line);
 
 		fields.erase(fields.begin(), fields.end());
 	}

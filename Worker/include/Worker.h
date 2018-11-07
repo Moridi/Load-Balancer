@@ -16,17 +16,17 @@ public:
 
 	inline Worker();
 	void read_from_file();
-	void filter(std::istringstream input_stream);
+	void filter(std::string input_string);
 	inline void obtain_fields(std::istringstream input_stream);
-	void set_filters();
-	void set_file_names();
-//	inline int find(std::string field);
+	inline void set_filters();
+	inline void set_file_names();
 
 private:
 	static constexpr int BEGIN = 0;
 	std::vector<std::string> file_names;
 	std::map<std::string, int> fields;
 	VectorOfStringPairs filters;
+	std::vector<std::string> matched_goods;
 };
 
 #include "Worker-inl.h"

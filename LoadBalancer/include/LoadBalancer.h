@@ -1,10 +1,8 @@
 #ifndef LOAD_BALANCER_H_
 #define LOAD_BALANCER_H_
 
-#include <memory>
 #include <string>
 #include <vector>
-#include <utility>
 #include <exception>
 
 class BadFieldType : public std::exception {};

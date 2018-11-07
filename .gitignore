@@ -2,3 +2,5 @@ LoadBalancer/builds
 Worker/builds
 LoadBalancer/CMakeLists.txt.user
 Worker/CMakeLists.txt.user
+Presenter/builds
+Presenter/CMakeLists.txt.user
