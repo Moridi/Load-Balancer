@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "LoadBalancer.h"
 
 using namespace std;

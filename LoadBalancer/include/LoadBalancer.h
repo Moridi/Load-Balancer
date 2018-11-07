@@ -12,7 +12,8 @@ class BadFieldType : public std::exception {};
 class LoadBalancer
 {
 public:
-	typedef std::vector<std::pair<std::string, std::string>> VectorOfStringPairs;
+	typedef std::vector<std::pair<std::string, std::string>>
+			VectorOfStringPairs;
 
 	enum class FieldType : uint8_t
 	{
