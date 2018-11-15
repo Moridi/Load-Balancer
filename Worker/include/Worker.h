@@ -20,6 +20,7 @@ public:
 	inline void obtain_fields(std::istringstream input_stream);
 	inline void set_filters();
 	inline void set_file_names();
+	inline void print();
 
 private:
 	static constexpr int BEGIN = 0;

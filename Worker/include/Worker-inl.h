@@ -34,4 +34,10 @@ void Worker::set_filters()
 				field_name, field_value));
 }
 
+void Worker::print()
+{
+	for (int i = 0; i < matched_goods.size(); ++i)
+		std::cout << matched_goods[i] << std::endl;
+}
+
 #endif

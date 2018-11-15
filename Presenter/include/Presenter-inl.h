@@ -5,7 +5,13 @@
 #error "Presenter-inl.h" should be included only in "Presenter.h" file.
 #endif
 
-Presenter::Presenter()
-{}
+//Presenter::Presenter()
+//{
+//	ifstream input_file(file_names[file_index]);
+//	string line;
+
+//	while (getline(input_file, line))
+//		filter(line);
+//}
 
 #endif

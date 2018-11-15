@@ -45,6 +45,7 @@ void LoadBalancer::fill_fields(const vector<string>& tokens)
 
 	for (int index = BEGIN; index < tokens.size(); ++index)
 	{
+		cout << "field name and price: " << tokens[index] << endl;
 		string field_name = get_token(tokens[index], FIELD_NAME_INDEX);
 		string field_value = get_token(tokens[index], FIELD_VALUE_INDEX);
 
@@ -74,5 +75,4 @@ void LoadBalancer::get_input()
 
 	std::vector<std::string> tokens = tokenize(input, ARGUMENTS_DELIMITER);
 	fill_fields(tokens);
-	print();
 }

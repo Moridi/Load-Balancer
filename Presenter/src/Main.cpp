@@ -2,6 +2,8 @@
 
 int main()
 {
-	Presenter presenter;
+	Presenter presenter("sampleDataset");
+	presenter.print();
+	presenter.sort();
 	return 0;
 }
