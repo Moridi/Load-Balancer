@@ -8,7 +8,8 @@
 #include <bits/stdc++.h>
 
 LoadBalancer::LoadBalancer() noexcept
-{}
+{
+}
 
 std::string LoadBalancer::remove_spaces(std::string line) const
 {
@@ -49,6 +50,40 @@ std::string LoadBalancer::get_full_path(std::string entry)
 	realpath(CURRENT_DIRECTORY, current_path);
 
 	return std::string(current_path) + SLASH + dataset_directory + SLASH + entry;
+}
+
+size_t LoadBalancer::get_size(std::string value)
+{
+	return value.size() * static_cast<size_t>(sizeof(char));
+}
+
+void LoadBalancer::set_argv_element(char*** argv, int index, std::string value)
+{
+	(*argv)[index] = reinterpret_cast<char*>(malloc(get_size(value)));
+	strcpy((*argv)[index], value.c_str());
+}
+
+void LoadBalancer::set_file_arguments(char*** argv, int& index,
+		const std::vector<std::string>& files_name)
+{
+	for (int j = 0; j < files_name.size(); ++index, ++j)
+		set_argv_element(argv, index, files_name[j]);
+}
+
+void LoadBalancer::set_argv(const std::vector<std::string>& files_name, char*** argv)
+{
+	int index;
+	set_filter_arguments(argv, index);
+	set_file_arguments(argv, index, files_name);
+	(*argv)[index] = nullptr;
+}
+
+std::string LoadBalancer::get_token(std::string line, const int index) const
+{
+	constexpr char ASSIGN_DELIMITER = '=';
+
+	std::vector<std::string> tokens = tokenize(line, ASSIGN_DELIMITER);
+	return tokens[index];
 }
 
 #endif

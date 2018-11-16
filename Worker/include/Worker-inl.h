@@ -9,7 +9,8 @@
 #include <sstream>
 
 Worker::Worker()
-{}
+{
+}
 
 void Worker::obtain_fields(std::istringstream input_stream)
 {

@@ -11,19 +11,19 @@ class BadFieldType : public std::exception {};
 class Worker
 {
 public:
-	typedef std::vector<std::pair<std::string, std::string>>
-			VectorOfStringPairs;
+	typedef std::vector<std::pair<std::string, std::string>> VectorOfStringPairs;
 
 	inline Worker();
+	inline void obtain_fields(std::istringstream input_stream);
+	inline void print();
 	void read_from_file();
 	void filter(std::string input_string);
-	inline void obtain_fields(std::istringstream input_stream);
 	void set_filters(char* arguments[]);
 	void set_files_name(int size, char* files_name[]);
-	inline void print();
 
 private:
 	static constexpr int BEGIN = 0;
+
 	std::vector<std::string> files_name;
 	std::map<std::string, int> fields;
 	VectorOfStringPairs filters;

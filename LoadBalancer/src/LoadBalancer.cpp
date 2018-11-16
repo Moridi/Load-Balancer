@@ -12,29 +12,6 @@
 
 using namespace std;
 
-string LoadBalancer::get_token(string line, const int index) const
-{
-	constexpr char ASSIGN_DELIMITER = '=';
-
-	std::vector<std::string> tokens = tokenize(line, ASSIGN_DELIMITER);
-	return tokens[index];
-}
-
-void LoadBalancer::print()
-{
-	cout << "Fields :" << endl;
-	for (int i = 0; i < fields.size(); ++i)
-		cout << fields[i].first << ":" << fields[i].second << endl;
-
-	cout << "Sorting Value : " << endl << sorting_value << endl;
-	cout << "Process Count : " << endl << process_count << endl;
-	cout << "Direction : " << endl << dataset_directory << endl;
-
-	cout << "Data Set:" << endl;
-	for (int i = 0; i < dataset.size(); ++i)
-		cout << dataset[i] << endl;
-}
-
 LoadBalancer::FieldType LoadBalancer::get_token_type(string field_name)
 {
 	constexpr char PRICE[] = "price";
@@ -57,16 +34,18 @@ void LoadBalancer::fill_fields(const vector<string>& tokens)
 	constexpr int FIELD_VALUE_INDEX = 1;
 	constexpr int BEGIN = 0;
 
+	string field_name;
+	string field_value;
+
 	for (int index = BEGIN; index < tokens.size(); ++index)
 	{
-		string field_name = get_token(tokens[index], FIELD_NAME_INDEX);
-		string field_value = get_token(tokens[index], FIELD_VALUE_INDEX);
+		field_name = get_token(tokens[index], FIELD_NAME_INDEX);
+		field_value = get_token(tokens[index], FIELD_VALUE_INDEX);
 
 		switch (get_token_type(field_name))
 		{
 			case FieldType::FILTERING_VALUE:
-				fields.push_back(pair<string, string>(
-						field_name, field_value));
+				fields.push_back(pair<string, string>(field_name, field_value));
 				break;
 			case FieldType::SORTING_VALUE:
 				sorting_value = field_value;
@@ -84,126 +63,115 @@ void LoadBalancer::fill_fields(const vector<string>& tokens)
 void LoadBalancer::get_input()
 {
 	constexpr char ARGUMENTS_DELIMITER = '-';
+
 	string input;
 	getline(cin, input);
-
 	std::vector<std::string> tokens = tokenize(input, ARGUMENTS_DELIMITER);
 	fill_fields(tokens);
 }
 
-int LoadBalancer::iterate_on_directory()
+void LoadBalancer::fill_dataset(DIR* directory)
+{
+	struct dirent* entry;
+	while ((entry = readdir(directory)) != nullptr)
+	if (is_new_file(string(entry->d_name)))
+	{
+		string full_path = get_full_path(string(entry->d_name));
+		dataset.push_back(full_path);
+	}
+	closedir(directory);
+}
+
+void LoadBalancer::iterate_on_directory()
 {
 	DIR* directory;
-	struct dirent* entry;
 
 	if ((directory = opendir(dataset_directory.c_str())) != nullptr)
-	{
-		while ((entry = readdir(directory)) != nullptr)
-			if (is_new_file(string(entry->d_name)))
-			{
-				string full_path = get_full_path(
-						string(entry->d_name));
-				dataset.push_back(full_path);
-			}
-		closedir (directory);
-	}
+		fill_dataset(directory);
 	else
 	{
 		cerr << "Could not open directory..." << endl;
-		return EXIT_FAILURE;
+		throw BadDirectoryAddress();
 	}
-	return EXIT_SUCCESS;
 }
 
-void LoadBalancer::set_argv(vector<string> files_name, char*** argv)
+void LoadBalancer::set_filter_arguments(char*** argv, int& index)
 {
 	constexpr char worker[] = "Worker";
-	int i;
+	constexpr int EXECUTABLE_INDEX = 0;
+	constexpr int NUMBER_OF_FIELDS_INDEX = 1;
+
 	int j = 0;
 
-	(*argv)[0] = reinterpret_cast<char*>(malloc(sizeof(worker)));
-	strcpy((*argv)[0], worker);
+	set_argv_element(argv, EXECUTABLE_INDEX, worker);
+	set_argv_element(argv, NUMBER_OF_FIELDS_INDEX, to_string(fields.size()));
 
-	string number_of_fields = to_string(fields.size());
-
-	(*argv)[1] = reinterpret_cast<char*>(malloc(
-			number_of_fields.size() * sizeof(char)));
-	strcpy((*argv)[1], number_of_fields.c_str());
-
-	for (i = 2; j < fields.size(); i += 2)
+	for (index = 2; j < fields.size(); index += 2, ++j)
 	{
-		(*argv)[i] = reinterpret_cast<char*>(malloc(
-				fields[j].first.size() * sizeof(char)));
-		strcpy((*argv)[i], fields[j].first.c_str());
-
-		(*argv)[i + 1] = reinterpret_cast<char*>(malloc(
-				fields[j].second.size() * sizeof(char)));
-		strcpy((*argv)[i + 1], fields[j].second.c_str());
-		++j;
+		set_argv_element(argv, index, fields[j].first);
+		set_argv_element(argv, index + 1, fields[j].second);
 	}
+}
 
-	for (j = 0; j < files_name.size(); ++i)
+void LoadBalancer::read_from_pipe(int begin, int end, vector<string>& files_name,
+		int file_descriptor[])
+{
+	char* received_value = reinterpret_cast<char*>(
+			malloc(sizeof(char) * MAX_PATH_SIZE));
+
+	for (int j = begin; j < end; ++j)
 	{
-		(*argv)[i] = reinterpret_cast<char*>(malloc(
-				files_name[j].size() * sizeof(char)));
-		strcpy((*argv)[i], files_name[j].c_str());
-		j++;
+		read(file_descriptor[READ_DESCRIPTOR], received_value, MAX_PATH_SIZE);
+		files_name.push_back(string(received_value));
 	}
+}
 
-	(*argv)[i] = nullptr;
+void LoadBalancer::exec_worker(const vector<string>& files_name,
+		int file_descriptor[])
+{
+	static constexpr char EXECUTABLE_WORKER[] = "../../Worker/builds/Worker";
+
+	size_t argv_size = files_name.size() + fields.size() * 2 + 2;
+	close(file_descriptor[READ_DESCRIPTOR]);
+	char** argv = reinterpret_cast<char**>(malloc(argv_size * static_cast<size_t>(
+			sizeof(char*))));
+	set_argv(files_name, &argv);
+	execv(EXECUTABLE_WORKER, argv);
+	exit(EXIT_FAILURE);
+}
+
+void LoadBalancer::setup_new_worker(int file_descriptor[], int begin, int end)
+{
+	close(file_descriptor[WRITE_DESCRIPTOR]);
+	vector<string> files_name;
+
+	read_from_pipe(begin, end, files_name, file_descriptor);
+	exec_worker(files_name, file_descriptor);
+}
+
+void LoadBalancer::write_to_pipe(int begin, int end, int file_descriptor[])
+{
+	close(file_descriptor[READ_DESCRIPTOR]);
+
+	for (int j = begin; j < end; ++j)
+		write(file_descriptor[WRITE_DESCRIPTOR], dataset[j].c_str(), MAX_PATH_SIZE);
+
+	close(file_descriptor[WRITE_DESCRIPTOR]);
+	wait(nullptr);
 }
 
 void LoadBalancer::send_data(int begin, int end)
 {
 	constexpr int CHILD = 0;
-	constexpr int READ_DESCRIPTOR = 0;
-	constexpr int WRITE_DESCRIPTOR = 1;
-	constexpr int MAX_PATH_SIZE = PATH_MAX + 1;
 
 	int file_descriptor[2];
-	char* received_value = reinterpret_cast<char*>(
-			malloc(sizeof(char) * MAX_PATH_SIZE));
-
 	pipe(file_descriptor);
 
 	if (fork() == CHILD)
-	{
-		close(file_descriptor[WRITE_DESCRIPTOR]);
-		vector<string> files_name;
-
-		for (int j = begin; j < end; ++j)
-		{
-			read(file_descriptor[READ_DESCRIPTOR], received_value,
-					MAX_PATH_SIZE);
-			files_name.push_back(string(received_value));
-		}
-
-		cout << "\nChild with PID: " << getpid() << endl;
-
-		close(file_descriptor[READ_DESCRIPTOR]);
-//		char** argv = reinterpret_cast<char**>(malloc(
-//				files_name.size() * sizeof(char*) + 2));
-
-		char** argv = reinterpret_cast<char**>(malloc(
-				(files_name.size() + fields.size() * 2 + 2) * sizeof(char*)));
-		set_argv(files_name, &argv);
-		execv("../../Worker/builds/Worker", argv);
-		exit(EXIT_SUCCESS);
-	}
+		setup_new_worker(file_descriptor, begin, end);
 	else
-	{
-		close(file_descriptor[READ_DESCRIPTOR]);
-		cout << "Parent with PID: " << getpid() << endl;
+		write_to_pipe(begin, end, file_descriptor);
 
-		for (int j = begin; j < end; ++j)
-		{
-			write(file_descriptor[WRITE_DESCRIPTOR], dataset[j].c_str(),
-			      MAX_PATH_SIZE);
-			cout << dataset[j] << endl;
-		}
-		close(file_descriptor[WRITE_DESCRIPTOR]);
-		wait(nullptr);
-	}
 }
 
 void LoadBalancer::allot_files()

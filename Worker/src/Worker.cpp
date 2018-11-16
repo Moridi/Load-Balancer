@@ -7,8 +7,9 @@ using namespace std;
 void Worker::filter(string input_string)
 {
 	istringstream input_stream(input_string);
-	string field;
 	vector<string> good_information;
+	string field;
+
 	while (input_stream >> field)
 		good_information.push_back(field);
 
@@ -47,30 +48,17 @@ void Worker::read_from_file()
 void Worker::set_files_name(int size, char* arguments[])
 {
 	int filters_size = (atoi(arguments[1]) + 1) * 2;
-	int j = 0;
 	size = size - filters_size;
 
-	cout << "Printing from Worker:" << endl;
-	for (int i = filters_size; j < size; ++i)
-	{
-		cout << arguments[i] << endl;
+	for (int i = filters_size, j = 0; j < size; ++i, ++j)
 		files_name.push_back(string(arguments[i]));
-		++j;
-	}
 }
 
 void Worker::set_filters(char* arguments[])
 {
-//	std::string field_name, field_value;
-//	while((std::cin >> field_name >> field_value) && (field_name != "quit"))
-//		filters.push_back(std::pair<std::string, std::string>(
-//				field_name, field_value));
-	cout << "Filters from Worker:" << endl;
-	for (int i = 1; i <= atoi(arguments[1]); ++i)
-	{
-		cout << "field_name: " << arguments[i * 2]
-				<< " - field_value: " << arguments[i * 2 + 1] << endl;
+	constexpr int NUMBER_OF_PAIRS_INDEX = 1;
+
+	for (int i = 1; i <= atoi(arguments[NUMBER_OF_PAIRS_INDEX]); ++i)
 		filters.push_back(std::pair<std::string, std::string>(
 				arguments[i * 2], arguments[i * 2 + 1]));
-	}
 }
