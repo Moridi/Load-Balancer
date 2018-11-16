@@ -34,9 +34,11 @@ public:
 	inline bool is_new_file(std::string entry);
 	inline std::string get_full_path(std::string entry);
 	void allot_files();
-	void send_data(std::string file_data);
+	void send_data(int index, int files_per_worker);
+	void set_argv(std::vector<std::string> files_name, char*** argv);
 
 private:
+	static constexpr int BEGIN = 0;
 	VectorOfStringPairs fields;
 	std::string sorting_value;
 	int process_count;

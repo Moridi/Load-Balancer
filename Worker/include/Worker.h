@@ -18,13 +18,13 @@ public:
 	void read_from_file();
 	void filter(std::string input_string);
 	inline void obtain_fields(std::istringstream input_stream);
-	inline void set_filters();
-	inline void set_file_names();
+	void set_filters(char* arguments[]);
+	void set_files_name(int size, char* files_name[]);
 	inline void print();
 
 private:
 	static constexpr int BEGIN = 0;
-	std::vector<std::string> file_names;
+	std::vector<std::string> files_name;
 	std::map<std::string, int> fields;
 	VectorOfStringPairs filters;
 	std::vector<std::string> matched_goods;

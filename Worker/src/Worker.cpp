@@ -28,9 +28,9 @@ void Worker::filter(string input_string)
 
 void Worker::read_from_file()
 {
-	for (int file_index = BEGIN; file_index < file_names.size(); ++file_index)
+	for (int file_index = BEGIN; file_index < files_name.size(); ++file_index)
 	{
-		ifstream input_file(file_names[file_index]);
+		ifstream input_file(files_name[file_index]);
 		string line;
 
 		// Reading the first line which contains field names
@@ -41,5 +41,36 @@ void Worker::read_from_file()
 			filter(line);
 
 		fields.erase(fields.begin(), fields.end());
+	}
+}
+
+void Worker::set_files_name(int size, char* arguments[])
+{
+	int filters_size = (atoi(arguments[1]) + 1) * 2;
+	int j = 0;
+	size = size - filters_size;
+
+	cout << "Printing from Worker:" << endl;
+	for (int i = filters_size; j < size; ++i)
+	{
+		cout << arguments[i] << endl;
+		files_name.push_back(string(arguments[i]));
+		++j;
+	}
+}
+
+void Worker::set_filters(char* arguments[])
+{
+//	std::string field_name, field_value;
+//	while((std::cin >> field_name >> field_value) && (field_name != "quit"))
+//		filters.push_back(std::pair<std::string, std::string>(
+//				field_name, field_value));
+	cout << "Filters from Worker:" << endl;
+	for (int i = 1; i <= atoi(arguments[1]); ++i)
+	{
+		cout << "field_name: " << arguments[i * 2]
+				<< " - field_value: " << arguments[i * 2 + 1] << endl;
+		filters.push_back(std::pair<std::string, std::string>(
+				arguments[i * 2], arguments[i * 2 + 1]));
 	}
 }

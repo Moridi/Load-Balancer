@@ -5,6 +5,10 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <strings.h>
+#include <unistd.h>
+
+#include <sys/types.h>
+#include <sys/wait.h>
 
 using namespace std;
 
@@ -111,51 +115,108 @@ int LoadBalancer::iterate_on_directory()
 	return EXIT_SUCCESS;
 }
 
-void LoadBalancer::send_data(string file_data)
+void LoadBalancer::set_argv(vector<string> files_name, char*** argv)
 {
+	constexpr char worker[] = "Worker";
+	int i;
+	int j = 0;
+
+	(*argv)[0] = reinterpret_cast<char*>(malloc(sizeof(worker)));
+	strcpy((*argv)[0], worker);
+
+	string number_of_fields = to_string(fields.size());
+
+	(*argv)[1] = reinterpret_cast<char*>(malloc(
+			number_of_fields.size() * sizeof(char)));
+	strcpy((*argv)[1], number_of_fields.c_str());
+
+	for (i = 2; j < fields.size(); i += 2)
+	{
+		(*argv)[i] = reinterpret_cast<char*>(malloc(
+				fields[j].first.size() * sizeof(char)));
+		strcpy((*argv)[i], fields[j].first.c_str());
+
+		(*argv)[i + 1] = reinterpret_cast<char*>(malloc(
+				fields[j].second.size() * sizeof(char)));
+		strcpy((*argv)[i + 1], fields[j].second.c_str());
+		++j;
+	}
+
+	for (j = 0; j < files_name.size(); ++i)
+	{
+		(*argv)[i] = reinterpret_cast<char*>(malloc(
+				files_name[j].size() * sizeof(char)));
+		strcpy((*argv)[i], files_name[j].c_str());
+		j++;
+	}
+
+	(*argv)[i] = nullptr;
+}
+
+void LoadBalancer::send_data(int begin, int end)
+{
+	constexpr int CHILD = 0;
 	constexpr int READ_DESCRIPTOR = 0;
 	constexpr int WRITE_DESCRIPTOR = 1;
 	constexpr int MAX_PATH_SIZE = PATH_MAX + 1;
+
 	int file_descriptor[2];
 	char* received_value = reinterpret_cast<char*>(
 			malloc(sizeof(char) * MAX_PATH_SIZE));
 
 	pipe(file_descriptor);
 
-	if (fork() == 0)
+	if (fork() == CHILD)
 	{
 		close(file_descriptor[WRITE_DESCRIPTOR]);
-		read(file_descriptor[READ_DESCRIPTOR], received_value,
-				MAX_PATH_SIZE);
-		printf("Child(%d) received value: %s\n", getpid(), received_value);
+		vector<string> files_name;
+
+		for (int j = begin; j < end; ++j)
+		{
+			read(file_descriptor[READ_DESCRIPTOR], received_value,
+					MAX_PATH_SIZE);
+			files_name.push_back(string(received_value));
+		}
+
+		cout << "\nChild with PID: " << getpid() << endl;
 
 		close(file_descriptor[READ_DESCRIPTOR]);
+//		char** argv = reinterpret_cast<char**>(malloc(
+//				files_name.size() * sizeof(char*) + 2));
+
+		char** argv = reinterpret_cast<char**>(malloc(
+				(files_name.size() + fields.size() * 2 + 2) * sizeof(char*)));
+		set_argv(files_name, &argv);
+		execv("../../Worker/builds/Worker", argv);
+		exit(EXIT_SUCCESS);
 	}
 	else
 	{
 		close(file_descriptor[READ_DESCRIPTOR]);
-		write(file_descriptor[WRITE_DESCRIPTOR], file_data.c_str(),
-				MAX_PATH_SIZE);
-		printf("Parent(%d) send value: %s\n", getpid(), file_data.c_str());
+		cout << "Parent with PID: " << getpid() << endl;
 
+		for (int j = begin; j < end; ++j)
+		{
+			write(file_descriptor[WRITE_DESCRIPTOR], dataset[j].c_str(),
+			      MAX_PATH_SIZE);
+			cout << dataset[j] << endl;
+		}
 		close(file_descriptor[WRITE_DESCRIPTOR]);
+		wait(nullptr);
 	}
 }
 
 void LoadBalancer::allot_files()
 {
 	int files_per_worker = dataset.size() / process_count;
-	int i, j;
+	int i;
 
-	for (i = files_per_worker; i < dataset.size(); i += files_per_worker)
+	for (i = BEGIN; i + files_per_worker < dataset.size(); i += files_per_worker)
 	{
-		cout << i << "- Worker:" << endl;
-		for (j = i - files_per_worker; j < i; ++j)
-			cout << dataset[j] << endl;
-		if (i / files_per_worker != process_count)
-			cout << "it's not last one!" << endl;
+		if (i / files_per_worker + 1 == process_count)
+			break;
+		send_data(i, i + files_per_worker);
 	}
 
-	for (; j < dataset.size(); ++j)
-		send_data(dataset[j]);
+	send_data(i, dataset.size());
 }
