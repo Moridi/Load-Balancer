@@ -14,10 +14,10 @@ public:
 	void sort();
 	void merge_sort(int l, int r);
 	void merge(int l, int m, int r);
-	void print_array();
 	inline std::vector<std::string> tokenize(const std::string& line,
 			const char delimiter) noexcept;
 	std::string get_token(std::string line, const int index);
+
 private:
 	static constexpr int BEGIN = 0;
 	bool is_descended;

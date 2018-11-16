@@ -18,10 +18,19 @@ void Presenter::obtain_fields(std::istringstream input_stream)
 
 Presenter::Presenter(string file_name)
 {
+	constexpr char DESCEND[] = "descend";
+
 	ifstream input_file(file_name);
 	string line;
 
-	// Reading the first line which contains field names
+	// Reading the first line which contains sorting type
+	getline(input_file, line);
+	if (line == DESCEND)
+		is_descended = true;
+	else
+		is_descended = false;
+
+	// Reading the second line which contains field names
 	getline(input_file, line);
 	obtain_fields(istringstream(line));
 
@@ -31,15 +40,14 @@ Presenter::Presenter(string file_name)
 
 void Presenter::print()
 {
-	cout << "Fields Number:" << endl;
-	for (std::map<std::string,int>::iterator it=fields.begin();
-			it!=fields.end(); ++it)
-		std::cout << it->first << " => " << it->second << '\n';
+	int i;
 
-	cout << "Matched Goods:" << endl;
-	for (int i = BEGIN; i < matched_goods.size(); ++i)
-		cout << matched_goods[i] << endl;
-	cout << endl;
+	if (is_descended)
+		for (i = BEGIN; i < matched_goods.size(); ++i)
+			cout << "	" << matched_goods[i] << endl;
+	else
+		for (i = matched_goods.size() - 1; i >= 0; --i)
+			cout << "	" << matched_goods[i] << endl;
 }
 
 void Presenter::merge(int begin, int mid, int right)
@@ -109,23 +117,9 @@ void Presenter::merge_sort(int begin, int end)
 	}
 }
 
-void Presenter::print_array()
-{
-	int i;
-	for (i = BEGIN; i < matched_goods.size(); i++)
-		cout << "	" << matched_goods[i] << endl;
-	printf("\n");
-}
-
 void Presenter::sort()
 {
-	printf("Given array is \n");
-	print_array();
-
 	merge_sort(BEGIN, matched_goods.size() - 1);
-
-	printf("\nSorted array is \n");
-	print_array();
 }
 
 std::vector<std::string> Presenter::tokenize(const std::string& line,

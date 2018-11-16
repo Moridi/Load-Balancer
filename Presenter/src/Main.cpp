@@ -3,7 +3,7 @@
 int main()
 {
 	Presenter presenter("sampleDataset");
-	presenter.print();
 	presenter.sort();
+	presenter.print();
 	return 0;
 }

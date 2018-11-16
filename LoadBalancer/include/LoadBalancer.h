@@ -30,12 +30,18 @@ public:
 	void print();
 	void fill_fields(const std::vector<std::string>& tokens);
 	FieldType get_token_type(std::string field_name);
+	int iterate_on_directory();
+	inline bool is_new_file(std::string entry);
+	inline std::string get_full_path(std::string entry);
+	void allot_files();
+	void send_data(std::string file_data);
 
 private:
 	VectorOfStringPairs fields;
 	std::string sorting_value;
 	int process_count;
-	std::string direction;
+	std::string dataset_directory;
+	std::vector<std::string> dataset;
 };
 
 #include "LoadBalancer-inl.h"

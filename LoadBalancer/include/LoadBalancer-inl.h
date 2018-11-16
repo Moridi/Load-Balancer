@@ -32,4 +32,23 @@ std::vector<std::string> LoadBalancer::tokenize(const std::string& line,
 	return tokens;
 }
 
+bool LoadBalancer::is_new_file(std::string entry)
+{
+	constexpr char CURRENT_DIRECTORY[] = ".";
+	constexpr char PARENT_DIRECTORY[] = "..";
+
+	return entry != CURRENT_DIRECTORY && entry != PARENT_DIRECTORY;
+}
+
+std::string LoadBalancer::get_full_path(std::string entry)
+{
+	constexpr char CURRENT_DIRECTORY[] = ".";
+	constexpr char SLASH[] = "/";
+
+	char current_path[PATH_MAX + 1];
+	realpath(CURRENT_DIRECTORY, current_path);
+
+	return std::string(current_path) + SLASH + dataset_directory + SLASH + entry;
+}
+
 #endif
