@@ -7,5 +7,6 @@ int main(int argc, char* argv[])
 	worker.set_files_name(argc, argv);
 	worker.read_from_file();
 	worker.print();
+	worker.send_data_to_presenter();
 	return 0;
 }

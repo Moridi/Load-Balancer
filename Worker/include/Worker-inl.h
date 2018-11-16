@@ -23,7 +23,7 @@ void Worker::obtain_fields(std::istringstream input_stream)
 void Worker::print()
 {
 	for (int i = 0; i < matched_goods.size(); ++i)
-		std::cout << matched_goods[i] << std::endl;
+		std::cout << matched_goods[i];
 }
 
 #endif

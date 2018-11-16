@@ -49,7 +49,8 @@ std::string LoadBalancer::get_full_path(std::string entry)
 	char current_path[PATH_MAX + 1];
 	realpath(CURRENT_DIRECTORY, current_path);
 
-	return std::string(current_path) + SLASH + dataset_directory + SLASH + entry;
+	return std::string(current_path) + SLASH + dataset_directory +
+			SLASH + entry;
 }
 
 size_t LoadBalancer::get_size(std::string value)
@@ -70,7 +71,8 @@ void LoadBalancer::set_file_arguments(char*** argv, int& index,
 		set_argv_element(argv, index, files_name[j]);
 }
 
-void LoadBalancer::set_argv(const std::vector<std::string>& files_name, char*** argv)
+void LoadBalancer::set_argv(const std::vector<std::string>& files_name,
+		char*** argv)
 {
 	int index;
 	set_filter_arguments(argv, index);

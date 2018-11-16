@@ -45,7 +45,8 @@ void LoadBalancer::fill_fields(const vector<string>& tokens)
 		switch (get_token_type(field_name))
 		{
 			case FieldType::FILTERING_VALUE:
-				fields.push_back(pair<string, string>(field_name, field_value));
+				fields.push_back(pair<string, string>(
+						field_name, field_value));
 				break;
 			case FieldType::SORTING_VALUE:
 				sorting_value = field_value;
@@ -104,7 +105,8 @@ void LoadBalancer::set_filter_arguments(char*** argv, int& index)
 	int j = 0;
 
 	set_argv_element(argv, EXECUTABLE_INDEX, worker);
-	set_argv_element(argv, NUMBER_OF_FIELDS_INDEX, to_string(fields.size()));
+	set_argv_element(argv, NUMBER_OF_FIELDS_INDEX, to_string(
+			fields.size()));
 
 	for (index = 2; j < fields.size(); index += 2, ++j)
 	{
@@ -113,15 +115,16 @@ void LoadBalancer::set_filter_arguments(char*** argv, int& index)
 	}
 }
 
-void LoadBalancer::read_from_pipe(int begin, int end, vector<string>& files_name,
-		int file_descriptor[])
+void LoadBalancer::read_from_pipe(int begin, int end,
+		vector<string>& files_name, int file_descriptor[])
 {
 	char* received_value = reinterpret_cast<char*>(
 			malloc(sizeof(char) * MAX_PATH_SIZE));
 
 	for (int j = begin; j < end; ++j)
 	{
-		read(file_descriptor[READ_DESCRIPTOR], received_value, MAX_PATH_SIZE);
+		read(file_descriptor[READ_DESCRIPTOR], received_value,
+				MAX_PATH_SIZE);
 		files_name.push_back(string(received_value));
 	}
 }
@@ -129,12 +132,13 @@ void LoadBalancer::read_from_pipe(int begin, int end, vector<string>& files_name
 void LoadBalancer::exec_worker(const vector<string>& files_name,
 		int file_descriptor[])
 {
-	static constexpr char EXECUTABLE_WORKER[] = "../../Worker/builds/Worker";
+	static constexpr char EXECUTABLE_WORKER[] =
+			"../../Worker/builds/Worker";
 
 	size_t argv_size = files_name.size() + fields.size() * 2 + 2;
 	close(file_descriptor[READ_DESCRIPTOR]);
-	char** argv = reinterpret_cast<char**>(malloc(argv_size * static_cast<size_t>(
-			sizeof(char*))));
+	char** argv = reinterpret_cast<char**>(malloc(
+			argv_size * static_cast<size_t>(sizeof(char*))));
 	set_argv(files_name, &argv);
 	execv(EXECUTABLE_WORKER, argv);
 	exit(EXIT_FAILURE);
@@ -154,7 +158,8 @@ void LoadBalancer::write_to_pipe(int begin, int end, int file_descriptor[])
 	close(file_descriptor[READ_DESCRIPTOR]);
 
 	for (int j = begin; j < end; ++j)
-		write(file_descriptor[WRITE_DESCRIPTOR], dataset[j].c_str(), MAX_PATH_SIZE);
+		write(file_descriptor[WRITE_DESCRIPTOR], dataset[j].c_str(),
+				MAX_PATH_SIZE);
 
 	close(file_descriptor[WRITE_DESCRIPTOR]);
 	wait(nullptr);
@@ -179,7 +184,8 @@ void LoadBalancer::allot_files()
 	int files_per_worker = dataset.size() / process_count;
 	int i;
 
-	for (i = BEGIN; i + files_per_worker < dataset.size(); i += files_per_worker)
+	for (i = BEGIN; i + files_per_worker < dataset.size();
+			i += files_per_worker)
 	{
 		if (i / files_per_worker + 1 == process_count)
 			break;
