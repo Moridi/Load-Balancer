@@ -46,11 +46,12 @@ public:
 	inline void set_argv(char*** argv, int file_descriptor[],
 			int number_of_files);
 	inline void write_to_pipe(std::string data, int file_descriptor[]);
+	void clear_data();
 
 	void get_input();
 	void fill_fields(const std::vector<std::string>& tokens);
 	void iterate_on_directory();
-	void allot_files();
+	void process();
 	void send_data_to_worker(int index, int files_per_worker);
 	void set_filter_arguments(char*** argv, int& index);
 	void write_dataset_to_pipe(int begin, int end, int file_descriptor[]);
@@ -69,6 +70,7 @@ private:
 	int process_count;
 	std::string dataset_directory;
 	std::vector<std::string> dataset;
+	bool process_is_done;
 };
 
 #include "LoadBalancer-inl.h"

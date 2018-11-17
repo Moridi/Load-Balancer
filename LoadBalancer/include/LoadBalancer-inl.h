@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 
 LoadBalancer::LoadBalancer() noexcept
+: process_is_done(false)
 {
 }
 

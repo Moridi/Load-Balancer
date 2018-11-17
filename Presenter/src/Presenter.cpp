@@ -5,6 +5,8 @@
 
 #include <sys/stat.h>
 
+#define NAMED_PIPE "../../WorkerToPresenter"
+
 using namespace std;
 
 void Presenter::obtain_fields(std::istringstream input_stream)
@@ -24,12 +26,11 @@ void Presenter::merge_new_part(int old_size, int new_size)
 void Presenter::process()
 {
 	constexpr int READ_AND_WRITE_PERMISSION = 0666;
-	constexpr char myfifo[] = "../../WorkerToPresenter";
 	constexpr char FILE_DELIMITER[] = "###########";
 
-	mkfifo(myfifo, READ_AND_WRITE_PERMISSION);
+	mkfifo(NAMED_PIPE, READ_AND_WRITE_PERMISSION);
 
-	ifstream input_file(myfifo);
+	ifstream input_file(NAMED_PIPE);
 	string line;
 
 	// Reading the first line which contains file delimiter

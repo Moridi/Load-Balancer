@@ -5,6 +5,10 @@
 
 #define EXECUTABLE_PRESENTER "../../Presenter/builds/Presenter"
 #define EXECUTABLE_WORKER "../../Worker/builds/Worker"
+#define NAMED_PIPE "../../WorkerToPresenter"
+#define EMPTY_FILE "EmptyFile"
+#define COPY "cp"
+#define COPY_DIR "/bin/cp"
 
 using namespace std;
 
@@ -44,11 +48,20 @@ void LoadBalancer::fill_fields(const vector<string>& tokens)
 void LoadBalancer::get_input()
 {
 	constexpr char ARGUMENTS_DELIMITER = '-';
+	constexpr char QUIT[] = "quit";
 
 	string input;
 	getline(cin, input);
+
+	if (input == QUIT)
+	{
+		process_is_done = true;
+		return;
+	}
+
 	std::vector<std::string> tokens = tokenize(input, ARGUMENTS_DELIMITER);
 	fill_fields(tokens);
+	iterate_on_directory();
 }
 
 void LoadBalancer::fill_dataset(DIR* directory)
@@ -156,19 +169,47 @@ void LoadBalancer::setup_presenter()
 	wait(nullptr);
 }
 
-void LoadBalancer::allot_files()
+void LoadBalancer::clear_data()
 {
-	int files_per_worker = dataset.size() / process_count;
-	int i;
+	constexpr int NUMBER_OF_ARGUMENTS_FOR_COPY = 4;
+	char** argv = reinterpret_cast<char**>(malloc(
+			NUMBER_OF_ARGUMENTS_FOR_COPY *
+			static_cast<size_t>(sizeof(char*))));
 
-	for (i = BEGIN; i + files_per_worker < dataset.size();
-			i += files_per_worker)
+	int index = 0;
+	set_argv_element(&argv, index++, COPY);
+	set_argv_element(&argv, index++, EMPTY_FILE);
+	set_argv_element(&argv, index++, NAMED_PIPE);
+	argv[index] = nullptr;
+
+	fields.erase(fields.begin(), fields.end());
+	dataset.erase(dataset.begin(), dataset.end());
+	if (fork() == 0)
+		execv(COPY_DIR, argv);
+	wait(nullptr);
+}
+
+void LoadBalancer::process()
+{
+	while(true)
 	{
-		if (i / files_per_worker + 1 == process_count)
+		get_input();
+		if (process_is_done)
 			break;
-		send_data_to_worker(i, i + files_per_worker);
+
+		int files_per_worker = dataset.size() / process_count;
+		int i;
+
+		for (i = BEGIN; i + files_per_worker < dataset.size();
+		     i += files_per_worker)
+		{
+			if (i / files_per_worker + 1 == process_count)
+				break;
+			send_data_to_worker(i, i + files_per_worker);
+		}
+		send_data_to_worker(i, dataset.size());
+		wait_for_all_workers();
+		setup_presenter();
+		clear_data();
 	}
-	send_data_to_worker(i, dataset.size());
-	wait_for_all_workers();
-	setup_presenter();
 }
