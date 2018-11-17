@@ -33,36 +33,33 @@ public:
 	inline FieldType get_token_type(std::string field_name);
 	inline bool is_new_file(std::string entry);
 	inline std::string get_full_path(std::string entry);
-	inline void set_argv(const std::vector<std::string>& files_name,
-			char*** argv);
 	inline void set_file_arguments(char*** argv, int& index,
 			const std::vector<std::string>& files_name);
 	inline void set_argv_element(char*** argv, int index,
 			std::string value);
 	inline size_t get_size(std::string value);
 	inline void wait_for_all_workers();
+	inline void set_presenter_arguments(char*** argv);
+	inline void set_file_descriptor_arguments(char*** argv,
+			int file_descriptor[], int& index, int number_of_files);
+	inline void set_argv(char*** argv, int file_descriptor[],
+			int number_of_files);
 
 	void get_input();
 	void fill_fields(const std::vector<std::string>& tokens);
 	void iterate_on_directory();
 	void allot_files();
-	void send_data(int index, int files_per_worker);
+	void send_data_to_worker(int index, int files_per_worker);
 	void set_filter_arguments(char*** argv, int& index);
-	void setup_new_worker(int file_descriptor[], int begin, int end);
-	void read_from_pipe(int begin, int end,
-			std::vector<std::string>& files_name,
-			int file_descriptor[]);
 	void write_to_pipe(int begin, int end, int file_descriptor[]);
-	void exec_worker(const std::vector<std::string>& files_name,
-			int file_descriptor[]);
+	void exec_worker(int file_descriptor[], int number_of_files);
 	void fill_dataset(DIR* directory);
 	void setup_presenter();
-	void set_presenter_arguments(char*** argv);
 
 private:
 	static constexpr uint8_t BEGIN = 0;
 	static constexpr uint8_t READ_DESCRIPTOR = 0;
-	static constexpr int WRITE_DESCRIPTOR = 1;
+	static constexpr uint8_t WRITE_DESCRIPTOR = 1;
 	static constexpr int MAX_PATH_SIZE = PATH_MAX + 1;
 
 	VectorOfStringPairs fields;

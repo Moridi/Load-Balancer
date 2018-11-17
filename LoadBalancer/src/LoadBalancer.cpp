@@ -7,22 +7,6 @@
 
 using namespace std;
 
-LoadBalancer::FieldType LoadBalancer::get_token_type(string field_name)
-{
-	constexpr char PRICE[] = "price";
-	constexpr char PROCESS_COUNT[] = "prc_cnt";
-	constexpr char DIRECTION[] = "dir";
-
-	if (field_name == PRICE)
-		return FieldType::SORTING_VALUE;
-	else if (field_name == PROCESS_COUNT)
-		return FieldType::PROCESS_COUNT;
-	else if (field_name == DIRECTION)
-		return FieldType::DIRECTION;
-	else
-		return FieldType::FILTERING_VALUE;
-}
-
 void LoadBalancer::fill_fields(const vector<string>& tokens)
 {
 	constexpr int FIELD_NAME_INDEX = 0;
@@ -110,39 +94,19 @@ void LoadBalancer::set_filter_arguments(char*** argv, int& index)
 	}
 }
 
-void LoadBalancer::read_from_pipe(int begin, int end,
-		vector<string>& files_name, int file_descriptor[])
+void LoadBalancer::exec_worker(int file_descriptor[], int number_of_files)
 {
-	char* received_value = reinterpret_cast<char*>(
-			malloc(sizeof(char) * MAX_PATH_SIZE));
+	// argv = [Command + Number of Fields + (Fields(pair))* +
+	// Number of Files + First File Descriptor + Second File Descriptor]
+	constexpr int MINIMUM_NUMBER_OF_ARGUMENTS = 5;
+	constexpr int PAIR = 2;
 
-	for (int j = begin; j < end; ++j)
-	{
-		read(file_descriptor[READ_DESCRIPTOR], received_value,
-				MAX_PATH_SIZE);
-		files_name.push_back(string(received_value));
-	}
-}
-
-void LoadBalancer::exec_worker(const vector<string>& files_name,
-		int file_descriptor[])
-{
-	size_t argv_size = files_name.size() + fields.size() * 2 + 2;
-	close(file_descriptor[READ_DESCRIPTOR]);
+	size_t argv_size = fields.size() * PAIR + MINIMUM_NUMBER_OF_ARGUMENTS;
 	char** argv = reinterpret_cast<char**>(malloc(
 			argv_size * static_cast<size_t>(sizeof(char*))));
-	set_argv(files_name, &argv);
+
+	set_argv(&argv, file_descriptor, number_of_files);
 	execv(EXECUTABLE_WORKER, argv);
-	exit(EXIT_FAILURE);
-}
-
-void LoadBalancer::setup_new_worker(int file_descriptor[], int begin, int end)
-{
-	close(file_descriptor[WRITE_DESCRIPTOR]);
-	vector<string> files_name;
-
-	read_from_pipe(begin, end, files_name, file_descriptor);
-	exec_worker(files_name, file_descriptor);
 }
 
 void LoadBalancer::write_to_pipe(int begin, int end, int file_descriptor[])
@@ -156,30 +120,18 @@ void LoadBalancer::write_to_pipe(int begin, int end, int file_descriptor[])
 	close(file_descriptor[WRITE_DESCRIPTOR]);
 }
 
-void LoadBalancer::send_data(int begin, int end)
+void LoadBalancer::send_data_to_worker(int begin, int end)
 {
 	constexpr int CHILD = 0;
+	constexpr int NUMBER_OF_FILE_DESCRIPTORS = 2;
 
-	int file_descriptor[2];
+	int file_descriptor[NUMBER_OF_FILE_DESCRIPTORS];
 	pipe(file_descriptor);
 
 	if (fork() == CHILD)
-		setup_new_worker(file_descriptor, begin, end);
-	else
-		write_to_pipe(begin, end, file_descriptor);
+		exec_worker(file_descriptor, end - begin);
 
-}
-
-void LoadBalancer::set_presenter_arguments(char*** argv)
-{
-	constexpr int PRESENTER_ARGUMENT_SIZE = 3;
-	constexpr char PRESENTER[] = "Presenter";
-
-	(*argv) = reinterpret_cast<char**>(malloc(PRESENTER_ARGUMENT_SIZE *
-			static_cast<size_t>(sizeof(char*))));
-	set_argv_element(argv, PRESENTER_ARGUMENT_SIZE - 3, PRESENTER);
-	set_argv_element(argv, PRESENTER_ARGUMENT_SIZE - 2, sorting_value);
-	(*argv)[PRESENTER_ARGUMENT_SIZE - 1] = nullptr;
+	write_to_pipe(begin, end, file_descriptor);
 }
 
 void LoadBalancer::setup_presenter()
@@ -202,9 +154,9 @@ void LoadBalancer::allot_files()
 	{
 		if (i / files_per_worker + 1 == process_count)
 			break;
-		send_data(i, i + files_per_worker);
+		send_data_to_worker(i, i + files_per_worker);
 	}
-	send_data(i, dataset.size());
+	send_data_to_worker(i, dataset.size());
 	wait_for_all_workers();
 	setup_presenter();
 }

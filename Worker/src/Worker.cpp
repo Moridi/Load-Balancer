@@ -1,10 +1,13 @@
 #include "Worker.h"
 
 #include <fcntl.h>
-#include <sys/stat.h>
+#include <limits.h>
+#include <dirent.h>
 #include <unistd.h>
 
 #include <fstream>
+
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -58,13 +61,16 @@ void Worker::read_from_file()
 	}
 }
 
-void Worker::set_files_name(int size, char* arguments[])
+void Worker::set_files_name(char* arguments[])
 {
-	int filters_size = (atoi(arguments[1]) + 1) * 2;
-	size = size - filters_size;
+	const int filters_size = (atoi(arguments[1]) + 1) * 2;
+	int file_descriptor[2];
 
-	for (int i = filters_size, j = 0; j < size; ++i, ++j)
-		files_name.push_back(string(arguments[i]));
+	int number_of_files = atoi(arguments[filters_size]);
+	file_descriptor[READ_DESCRIPTOR] = atoi(arguments[filters_size + 1]);
+	file_descriptor[WRITE_DESCRIPTOR] = atoi(arguments[filters_size + 2]);
+
+	read_from_pipe(BEGIN, number_of_files, file_descriptor);
 }
 
 void Worker::set_filters(char* arguments[])
@@ -91,4 +97,22 @@ void Worker::send_data_to_presenter()
 		write(file_descriptor, matched_goods[i].c_str(),
 				matched_goods[i].size());
 	close(file_descriptor);
+}
+
+void Worker::read_from_pipe(int begin, int end, int file_descriptor[])
+{
+	constexpr int MAX_PATH_SIZE = PATH_MAX + 1;
+
+	close(file_descriptor[WRITE_DESCRIPTOR]);
+
+	char* received_value = reinterpret_cast<char*>(
+			malloc(sizeof(char) * MAX_PATH_SIZE));
+
+	for (int j = begin; j < end; ++j)
+	{
+		read(file_descriptor[READ_DESCRIPTOR], received_value,
+				MAX_PATH_SIZE);
+		files_name.push_back(string(received_value));
+	}
+	close(file_descriptor[READ_DESCRIPTOR]);
 }

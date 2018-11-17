@@ -5,6 +5,8 @@
 #error "LoadBalancer-inl.h" should be included only in "LoadBalancer.h" file.
 #endif
 
+#include <strings.h>
+
 #include <bits/stdc++.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -73,15 +75,6 @@ void LoadBalancer::set_file_arguments(char*** argv, int& index,
 		set_argv_element(argv, index, files_name[j]);
 }
 
-void LoadBalancer::set_argv(const std::vector<std::string>& files_name,
-		char*** argv)
-{
-	int index;
-	set_filter_arguments(argv, index);
-	set_file_arguments(argv, index, files_name);
-	(*argv)[index] = nullptr;
-}
-
 std::string LoadBalancer::get_token(std::string line, const int index) const
 {
 	constexpr char ASSIGN_DELIMITER = '=';
@@ -93,6 +86,54 @@ std::string LoadBalancer::get_token(std::string line, const int index) const
 void LoadBalancer::wait_for_all_workers()
 {
 	while(wait(nullptr) > 0);
+}
+
+void LoadBalancer::set_presenter_arguments(char*** argv)
+{
+	constexpr int PRESENTER_ARGUMENT_SIZE = 3;
+	constexpr char PRESENTER[] = "Presenter";
+
+	(*argv) = reinterpret_cast<char**>(malloc(PRESENTER_ARGUMENT_SIZE *
+			static_cast<size_t>(sizeof(char*))));
+	set_argv_element(argv, PRESENTER_ARGUMENT_SIZE - 3, PRESENTER);
+	set_argv_element(argv, PRESENTER_ARGUMENT_SIZE - 2, sorting_value);
+	(*argv)[PRESENTER_ARGUMENT_SIZE - 1] = nullptr;
+}
+
+void LoadBalancer::set_file_descriptor_arguments(char*** argv,
+		int file_descriptor[], int& index, int number_of_files)
+{
+	set_argv_element(argv, index++, std::to_string(number_of_files));
+	set_argv_element(argv, index++, std::to_string(
+			file_descriptor[READ_DESCRIPTOR]));
+	set_argv_element(argv, index++, std::to_string(
+			file_descriptor[WRITE_DESCRIPTOR]));
+}
+
+void LoadBalancer::set_argv(char*** argv, int file_descriptor[],
+		int number_of_files)
+{
+	int index;
+	set_filter_arguments(argv, index);
+	set_file_descriptor_arguments(argv, file_descriptor, index,
+			number_of_files);
+	(*argv)[index] = nullptr;
+}
+
+LoadBalancer::FieldType LoadBalancer::get_token_type(std::string field_name)
+{
+	constexpr char PRICE[] = "price";
+	constexpr char PROCESS_COUNT[] = "prc_cnt";
+	constexpr char DIRECTION[] = "dir";
+
+	if (field_name == PRICE)
+		return FieldType::SORTING_VALUE;
+	else if (field_name == PROCESS_COUNT)
+		return FieldType::PROCESS_COUNT;
+	else if (field_name == DIRECTION)
+		return FieldType::DIRECTION;
+	else
+		return FieldType::FILTERING_VALUE;
 }
 
 #endif
