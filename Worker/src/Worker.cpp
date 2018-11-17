@@ -63,8 +63,10 @@ void Worker::read_from_file()
 
 void Worker::set_files_name(char* arguments[])
 {
+	constexpr int NUMBER_OF_FILE_DESCRIPTORS = 2;
+
 	const int filters_size = (atoi(arguments[1]) + 1) * 2;
-	int file_descriptor[2];
+	int file_descriptor[NUMBER_OF_FILE_DESCRIPTORS];
 
 	int number_of_files = atoi(arguments[filters_size]);
 	file_descriptor[READ_DESCRIPTOR] = atoi(arguments[filters_size + 1]);

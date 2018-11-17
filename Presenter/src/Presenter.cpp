@@ -1,10 +1,9 @@
 #include "Presenter.h"
 
-#include <string.h>
-#include <sys/stat.h>
-
 #include <fstream>
 #include <iostream>
+
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -134,16 +133,24 @@ void Presenter::merge_sort(int begin, int end)
 	}
 }
 
-void Presenter::get_sorting_value(int argc, char**& argv)
+void Presenter::get_sorting_value(int argc, char**& arguments)
 {
 	constexpr char DESCEND[] = "descend";
-	constexpr int SORTING_VALUE_INDEX = 1;
-	constexpr int SAME = 0;
+	constexpr int NUMBER_OF_FILE_DESCRIPTORS = 2;
 
-	if (argc < 2)
+	if (argc < 3)
 		throw BadArgumentPassing();
 
-	if (strcmp(argv[SORTING_VALUE_INDEX], DESCEND) == SAME)
+	// argv = [ Presenter + Read File Descriptor + Write File Descriptor ]
+	int index = 1;
+	int file_descriptor[NUMBER_OF_FILE_DESCRIPTORS];
+
+	file_descriptor[READ_DESCRIPTOR] = atoi(arguments[index++]);
+	file_descriptor[WRITE_DESCRIPTOR] = atoi(arguments[index++]);
+
+	string sorting_value = read_from_pipe(file_descriptor);
+
+	if (sorting_value == DESCEND)
 		is_descended = true;
 	else
 		is_descended = false;

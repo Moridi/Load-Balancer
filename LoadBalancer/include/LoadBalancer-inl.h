@@ -5,10 +5,9 @@
 #error "LoadBalancer-inl.h" should be included only in "LoadBalancer.h" file.
 #endif
 
-#include <strings.h>
+#include <unistd.h>
 
 #include <bits/stdc++.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 
 LoadBalancer::LoadBalancer() noexcept
@@ -88,18 +87,6 @@ void LoadBalancer::wait_for_all_workers()
 	while(wait(nullptr) > 0);
 }
 
-void LoadBalancer::set_presenter_arguments(char*** argv)
-{
-	constexpr int PRESENTER_ARGUMENT_SIZE = 3;
-	constexpr char PRESENTER[] = "Presenter";
-
-	(*argv) = reinterpret_cast<char**>(malloc(PRESENTER_ARGUMENT_SIZE *
-			static_cast<size_t>(sizeof(char*))));
-	set_argv_element(argv, PRESENTER_ARGUMENT_SIZE - 3, PRESENTER);
-	set_argv_element(argv, PRESENTER_ARGUMENT_SIZE - 2, sorting_value);
-	(*argv)[PRESENTER_ARGUMENT_SIZE - 1] = nullptr;
-}
-
 void LoadBalancer::set_file_descriptor_arguments(char*** argv,
 		int file_descriptor[], int& index, int number_of_files)
 {
@@ -134,6 +121,32 @@ LoadBalancer::FieldType LoadBalancer::get_token_type(std::string field_name)
 		return FieldType::DIRECTION;
 	else
 		return FieldType::FILTERING_VALUE;
+}
+
+void LoadBalancer::set_presenter_arguments(char*** argv, int file_descriptor[])
+{
+	// argv = [ Presenter + Read File Descriptor + Write File Descriptor ]
+
+	constexpr int PRESENTER_ARGUMENT_SIZE = 4;
+	constexpr char PRESENTER[] = "Presenter";
+	int index = 0;
+
+	(*argv) = reinterpret_cast<char**>(malloc(PRESENTER_ARGUMENT_SIZE *
+			static_cast<size_t>(sizeof(char*))));
+
+	set_argv_element(argv, index++, PRESENTER);
+	set_argv_element(argv, index++, std::to_string(
+			file_descriptor[READ_DESCRIPTOR]));
+	set_argv_element(argv, index++, std::to_string(
+			file_descriptor[WRITE_DESCRIPTOR]));
+	(*argv)[index++] = nullptr;
+}
+
+void LoadBalancer::write_to_pipe(std::string data, int file_descriptor[])
+{
+	close(file_descriptor[READ_DESCRIPTOR]);
+	write(file_descriptor[WRITE_DESCRIPTOR], data.c_str(), MAX_PATH_SIZE);
+	close(file_descriptor[WRITE_DESCRIPTOR]);
 }
 
 #endif

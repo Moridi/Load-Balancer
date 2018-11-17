@@ -39,11 +39,13 @@ public:
 			std::string value);
 	inline size_t get_size(std::string value);
 	inline void wait_for_all_workers();
-	inline void set_presenter_arguments(char*** argv);
+	inline void set_presenter_arguments(char*** argv,
+			int file_descriptor[]);
 	inline void set_file_descriptor_arguments(char*** argv,
 			int file_descriptor[], int& index, int number_of_files);
 	inline void set_argv(char*** argv, int file_descriptor[],
 			int number_of_files);
+	inline void write_to_pipe(std::string data, int file_descriptor[]);
 
 	void get_input();
 	void fill_fields(const std::vector<std::string>& tokens);
@@ -51,7 +53,7 @@ public:
 	void allot_files();
 	void send_data_to_worker(int index, int files_per_worker);
 	void set_filter_arguments(char*** argv, int& index);
-	void write_to_pipe(int begin, int end, int file_descriptor[]);
+	void write_dataset_to_pipe(int begin, int end, int file_descriptor[]);
 	void exec_worker(int file_descriptor[], int number_of_files);
 	void fill_dataset(DIR* directory);
 	void setup_presenter();

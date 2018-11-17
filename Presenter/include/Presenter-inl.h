@@ -6,6 +6,8 @@
 #endif
 
 #include <sstream>
+#include <limits.h>
+#include <unistd.h>
 
 Presenter::Presenter()
 {
@@ -28,6 +30,20 @@ std::string Presenter::get_token(std::string line, const int index)
 	constexpr char ASSIGN_DELIMITER = ' ';
 	std::vector<std::string> tokens = tokenize(line, ASSIGN_DELIMITER);
 	return tokens[index];
+}
+
+std::string Presenter::read_from_pipe(int file_descriptor[])
+{
+	constexpr int MAX_PATH_SIZE = PATH_MAX + 1;
+
+	close(file_descriptor[WRITE_DESCRIPTOR]);
+
+	char* received_value = reinterpret_cast<char*>(
+			malloc(sizeof(char) * MAX_PATH_SIZE));
+
+	read(file_descriptor[READ_DESCRIPTOR], received_value, MAX_PATH_SIZE);
+	close(file_descriptor[READ_DESCRIPTOR]);
+	return std::string(received_value);
 }
 
 #endif

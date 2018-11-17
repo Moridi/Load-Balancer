@@ -1,6 +1,7 @@
 #include "LoadBalancer.h"
 
 #include <unistd.h>
+#include <strings.h>
 
 #define EXECUTABLE_PRESENTER "../../Presenter/builds/Presenter"
 #define EXECUTABLE_WORKER "../../Worker/builds/Worker"
@@ -109,7 +110,8 @@ void LoadBalancer::exec_worker(int file_descriptor[], int number_of_files)
 	execv(EXECUTABLE_WORKER, argv);
 }
 
-void LoadBalancer::write_to_pipe(int begin, int end, int file_descriptor[])
+void LoadBalancer::write_dataset_to_pipe(int begin, int end,
+		int file_descriptor[])
 {
 	close(file_descriptor[READ_DESCRIPTOR]);
 
@@ -131,15 +133,25 @@ void LoadBalancer::send_data_to_worker(int begin, int end)
 	if (fork() == CHILD)
 		exec_worker(file_descriptor, end - begin);
 
-	write_to_pipe(begin, end, file_descriptor);
+	write_dataset_to_pipe(begin, end, file_descriptor);
 }
 
 void LoadBalancer::setup_presenter()
 {
+	constexpr int CHILD = 0;
+	constexpr int NUMBER_OF_FILE_DESCRIPTORS = 2;
+
 	char** argv;
-	set_presenter_arguments(&argv);
-	if (fork() == 0)
+
+	int file_descriptor[NUMBER_OF_FILE_DESCRIPTORS];
+	pipe(file_descriptor);
+
+	set_presenter_arguments(&argv, file_descriptor);
+
+	if (fork() == CHILD)
 		execv(EXECUTABLE_PRESENTER, argv);
+
+	write_to_pipe(sorting_value, file_descriptor);
 
 	wait(nullptr);
 }
