@@ -181,10 +181,11 @@ void LoadBalancer::send_data(int begin, int end)
 
 void LoadBalancer::setup_presenter()
 {
+	constexpr char EXECUTABLE_PRESENTER[] = "../../Presenter/builds/Presenter";
 	char* argv[] = {"Presenter", nullptr};
 	if (fork() == 0)
 	{
-		execv("../../Presenter/builds/Presenter", argv);
+		execv(EXECUTABLE_PRESENTER, argv);
 	}
 	wait(nullptr);
 }
@@ -202,6 +203,5 @@ void LoadBalancer::allot_files()
 		send_data(i, i + files_per_worker);
 	}
 	send_data(i, dataset.size());
-
 	setup_presenter();
 }

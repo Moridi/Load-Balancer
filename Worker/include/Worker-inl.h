@@ -20,10 +20,4 @@ void Worker::obtain_fields(std::istringstream input_stream)
 		fields[field_name] = i;
 }
 
-void Worker::print()
-{
-	for (int i = 0; i < matched_goods.size(); ++i)
-		std::cout << matched_goods[i];
-}
-
 #endif

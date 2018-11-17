@@ -17,31 +17,46 @@ using namespace std;
 void Presenter::obtain_fields(std::istringstream input_stream)
 {
 	std::string field_name;
-
+	// @todo It should be different for different kind of files
 	for (int i = BEGIN; input_stream >> field_name; ++i)
 		fields[field_name] = i;
 }
 
-Presenter::Presenter(string /*file_name*/)
+void Presenter::merge_new_part(int old_size, int new_size)
 {
+	merge_sort(old_size, new_size);
+	merge(BEGIN, old_size - 1, new_size);
 }
 
 void Presenter::get_input()
 {
 	constexpr int READ_AND_WRITE_PERMISSION = 0666;
 	constexpr char myfifo[] = "../../WorkerToPresenter";
+	constexpr char FILE_DELIMITER[] = "###########";
 
 	mkfifo(myfifo, READ_AND_WRITE_PERMISSION);
 
 	ifstream input_file(myfifo);
 	string line;
 
-	// Reading the second line which contains field names
+	// Reading the first line which contains file delimiter
 	getline(input_file, line);
-	obtain_fields(istringstream(line));
+	while (true)
+	{
+		if (line != FILE_DELIMITER)
+			break;
 
-	while (getline(input_file, line))
-		matched_goods.push_back(line);
+		// Reading the second line which contains field names
+		getline(input_file, line);
+		obtain_fields(istringstream(line));
+
+		int old_size = matched_goods.size();
+
+		while (getline(input_file, line) && line != FILE_DELIMITER)
+			matched_goods.push_back(line);
+
+		merge_new_part(old_size, matched_goods.size() - 1);
+	}
 }
 
 void Presenter::print()
@@ -50,10 +65,10 @@ void Presenter::print()
 
 	if (is_descended)
 		for (i = BEGIN; i < matched_goods.size(); ++i)
-			cout << "	" << matched_goods[i] << endl;
+			cout << matched_goods[i] << endl;
 	else
 		for (i = matched_goods.size() - 1; i >= 0; --i)
-			cout << "	" << matched_goods[i] << endl;
+			cout << matched_goods[i] << endl;
 }
 
 void Presenter::merge(int begin, int mid, int right)
@@ -69,7 +84,7 @@ void Presenter::merge(int begin, int mid, int right)
 		left_part[left_index] = matched_goods[begin + left_index];
 
 	for (right_index = BEGIN; right_index < right_part_size; right_index++)
-		right_part[right_index] = matched_goods[mid + 1+ right_index];
+		right_part[right_index] = matched_goods[mid + 1 + right_index];
 
 	left_index = BEGIN;
 	right_index = BEGIN;
@@ -115,17 +130,11 @@ void Presenter::merge_sort(int begin, int end)
 	if (begin < end)
 	{
 		int mid = (end + begin) / 2;
-
 		merge_sort(begin, mid);
 		merge_sort(mid + 1, end);
 
 		merge(begin, mid, end);
 	}
-}
-
-void Presenter::sort()
-{
-	merge_sort(BEGIN, matched_goods.size() - 1);
 }
 
 std::vector<std::string> Presenter::tokenize(const std::string& line,

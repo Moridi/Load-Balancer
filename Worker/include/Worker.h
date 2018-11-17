@@ -16,12 +16,12 @@ public:
 
 	inline Worker();
 	inline void obtain_fields(std::istringstream input_stream);
-	inline void print();
 	void read_from_file();
 	void filter(std::string input_string);
 	void set_filters(char* arguments[]);
 	void set_files_name(int size, char* files_name[]);
 	void send_data_to_presenter();
+	void obtain_matched_goods(std::ifstream input_file, std::string line);
 
 private:
 	static constexpr int BEGIN = 0;

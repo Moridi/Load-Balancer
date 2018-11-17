@@ -37,6 +37,9 @@ void Worker::filter(string input_string)
 
 void Worker::read_from_file()
 {
+	constexpr char FILE_DELIMITER[] = "###########\n";
+	constexpr char END_LINE[] = "\n";
+
 	for (int file_index = BEGIN; file_index < files_name.size();
 			++file_index)
 	{
@@ -46,6 +49,8 @@ void Worker::read_from_file()
 		// Reading the first line which contains field names
 		getline(input_file, line);
 		obtain_fields(istringstream(line));
+
+		matched_goods.push_back(FILE_DELIMITER + line + END_LINE);
 
 		while (getline(input_file, line))
 			filter(line);
