@@ -56,6 +56,8 @@ public:
 			int file_descriptor[]);
 	void fill_dataset(DIR* directory);
 	void setup_presenter();
+	void wait_for_workers();
+	void set_presenter_arguments(char*** argv);
 
 private:
 	static constexpr uint8_t BEGIN = 0;

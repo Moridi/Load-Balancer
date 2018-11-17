@@ -162,7 +162,6 @@ void LoadBalancer::write_to_pipe(int begin, int end, int file_descriptor[])
 				MAX_PATH_SIZE);
 
 	close(file_descriptor[WRITE_DESCRIPTOR]);
-	wait(nullptr);
 }
 
 void LoadBalancer::send_data(int begin, int end)
@@ -179,15 +178,33 @@ void LoadBalancer::send_data(int begin, int end)
 
 }
 
+void LoadBalancer::set_presenter_arguments(char*** argv)
+{
+	constexpr int PRESENTER_ARGUMENT_SIZE = 3;
+	constexpr char PRESENTER[] = "Presenter";
+
+	(*argv) = reinterpret_cast<char**>(malloc(PRESENTER_ARGUMENT_SIZE *
+			static_cast<size_t>(sizeof(char*))));
+	set_argv_element(argv, PRESENTER_ARGUMENT_SIZE - 3, PRESENTER);
+	set_argv_element(argv, PRESENTER_ARGUMENT_SIZE - 2, sorting_value);
+	(*argv)[PRESENTER_ARGUMENT_SIZE - 1] = nullptr;
+}
+
 void LoadBalancer::setup_presenter()
 {
-	constexpr char EXECUTABLE_PRESENTER[] = "../../Presenter/builds/Presenter";
-	char* argv[] = {"Presenter", nullptr};
+	constexpr char EXECUTABLE_PRESENTER[] =
+			"../../Presenter/builds/Presenter";
+	char** argv;
+	set_presenter_arguments(&argv);
 	if (fork() == 0)
-	{
 		execv(EXECUTABLE_PRESENTER, argv);
-	}
+
 	wait(nullptr);
+}
+
+void LoadBalancer::wait_for_workers()
+{
+	while(wait(nullptr) > 0);
 }
 
 void LoadBalancer::allot_files()
@@ -203,5 +220,6 @@ void LoadBalancer::allot_files()
 		send_data(i, i + files_per_worker);
 	}
 	send_data(i, dataset.size());
+	wait_for_workers();
 	setup_presenter();
 }

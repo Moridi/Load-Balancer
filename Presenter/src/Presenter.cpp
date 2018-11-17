@@ -155,3 +155,18 @@ std::string Presenter::get_token(string line, const int index)
 	std::vector<std::string> tokens = tokenize(line, ASSIGN_DELIMITER);
 	return tokens[index];
 }
+
+void Presenter::get_sorting_value(int argc, char**& argv)
+{
+	constexpr char DESCEND[] = "descend";
+	constexpr int SORTING_VALUE_INDEX = 1;
+	constexpr int SAME = 0;
+
+	if (argc < 2)
+		throw BadArgumentPassing();
+
+	if (strcmp(argv[SORTING_VALUE_INDEX], DESCEND) == SAME)
+		is_descended = true;
+	else
+		is_descended = false;
+}

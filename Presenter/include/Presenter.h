@@ -4,6 +4,9 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <exception>
+
+class BadArgumentPassing : public std::exception {};
 
 class Presenter
 {
@@ -19,6 +22,7 @@ public:
 	void merge(int begin, int mid, int end);
 	void get_input();
 	void merge_new_part(int old_size, int new_size);
+	void get_sorting_value(int argc, char**& argv);
 
 private:
 	static constexpr int BEGIN = 0;
