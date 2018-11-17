@@ -6,6 +6,8 @@
 #endif
 
 #include <bits/stdc++.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 LoadBalancer::LoadBalancer() noexcept
 {
@@ -86,6 +88,11 @@ std::string LoadBalancer::get_token(std::string line, const int index) const
 
 	std::vector<std::string> tokens = tokenize(line, ASSIGN_DELIMITER);
 	return tokens[index];
+}
+
+void LoadBalancer::wait_for_all_workers()
+{
+	while(wait(nullptr) > 0);
 }
 
 #endif

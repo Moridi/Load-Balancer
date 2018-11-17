@@ -40,6 +40,7 @@ public:
 	inline void set_argv_element(char*** argv, int index,
 			std::string value);
 	inline size_t get_size(std::string value);
+	inline void wait_for_all_workers();
 
 	void get_input();
 	void fill_fields(const std::vector<std::string>& tokens);
@@ -56,7 +57,6 @@ public:
 			int file_descriptor[]);
 	void fill_dataset(DIR* directory);
 	void setup_presenter();
-	void wait_for_workers();
 	void set_presenter_arguments(char*** argv);
 
 private:

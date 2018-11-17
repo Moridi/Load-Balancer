@@ -1,14 +1,9 @@
 #include "LoadBalancer.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <strings.h>
 #include <unistd.h>
 
-#include <sys/types.h>
-#include <sys/wait.h>
+#define EXECUTABLE_PRESENTER "../../Presenter/builds/Presenter"
+#define EXECUTABLE_WORKER "../../Worker/builds/Worker"
 
 using namespace std;
 
@@ -132,9 +127,6 @@ void LoadBalancer::read_from_pipe(int begin, int end,
 void LoadBalancer::exec_worker(const vector<string>& files_name,
 		int file_descriptor[])
 {
-	static constexpr char EXECUTABLE_WORKER[] =
-			"../../Worker/builds/Worker";
-
 	size_t argv_size = files_name.size() + fields.size() * 2 + 2;
 	close(file_descriptor[READ_DESCRIPTOR]);
 	char** argv = reinterpret_cast<char**>(malloc(
@@ -192,19 +184,12 @@ void LoadBalancer::set_presenter_arguments(char*** argv)
 
 void LoadBalancer::setup_presenter()
 {
-	constexpr char EXECUTABLE_PRESENTER[] =
-			"../../Presenter/builds/Presenter";
 	char** argv;
 	set_presenter_arguments(&argv);
 	if (fork() == 0)
 		execv(EXECUTABLE_PRESENTER, argv);
 
 	wait(nullptr);
-}
-
-void LoadBalancer::wait_for_workers()
-{
-	while(wait(nullptr) > 0);
 }
 
 void LoadBalancer::allot_files()
@@ -220,6 +205,6 @@ void LoadBalancer::allot_files()
 		send_data(i, i + files_per_worker);
 	}
 	send_data(i, dataset.size());
-	wait_for_workers();
+	wait_for_all_workers();
 	setup_presenter();
 }

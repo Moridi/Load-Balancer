@@ -1,10 +1,10 @@
 #ifndef WORKER_H_
 #define WORKER_H_
 
-#include <exception>
 #include <vector>
 #include <string>
 #include <map>
+#include <exception>
 
 class BadFieldType : public std::exception {};
 

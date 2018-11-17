@@ -14,13 +14,13 @@ public:
 	inline Presenter();
 	inline std::vector<std::string> tokenize(const std::string& line,
 			const char delimiter) noexcept;
+	inline std::string get_token(std::string line, const int index);
 
-	std::string get_token(std::string line, const int index);
 	void obtain_fields(std::istringstream input_stream);
 	void print();
 	void merge_sort(int begin, int end);
 	void merge(int begin, int mid, int end);
-	void get_input();
+	void process();
 	void merge_new_part(int old_size, int new_size);
 	void get_sorting_value(int argc, char**& argv);
 
