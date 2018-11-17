@@ -179,6 +179,16 @@ void LoadBalancer::send_data(int begin, int end)
 
 }
 
+void LoadBalancer::setup_presenter()
+{
+	char* argv[] = {"Presenter", nullptr};
+	if (fork() == 0)
+	{
+		execv("../../Presenter/builds/Presenter", argv);
+	}
+	wait(nullptr);
+}
+
 void LoadBalancer::allot_files()
 {
 	int files_per_worker = dataset.size() / process_count;
@@ -191,6 +201,7 @@ void LoadBalancer::allot_files()
 			break;
 		send_data(i, i + files_per_worker);
 	}
-
 	send_data(i, dataset.size());
+
+	setup_presenter();
 }

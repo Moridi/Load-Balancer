@@ -55,6 +55,7 @@ public:
 	void exec_worker(const std::vector<std::string>& files_name,
 			int file_descriptor[]);
 	void fill_dataset(DIR* directory);
+	void setup_presenter();
 
 private:
 	static constexpr uint8_t BEGIN = 0;

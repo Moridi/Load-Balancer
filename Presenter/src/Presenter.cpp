@@ -1,6 +1,12 @@
 #include "Presenter.h"
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <fstream>
 #include <sstream>
@@ -16,19 +22,19 @@ void Presenter::obtain_fields(std::istringstream input_stream)
 		fields[field_name] = i;
 }
 
-Presenter::Presenter(string file_name)
+Presenter::Presenter(string /*file_name*/)
 {
-	constexpr char DESCEND[] = "descend";
+}
 
-	ifstream input_file(file_name);
+void Presenter::get_input()
+{
+	constexpr int READ_AND_WRITE_PERMISSION = 0666;
+	constexpr char myfifo[] = "../../WorkerToPresenter";
+
+	mkfifo(myfifo, READ_AND_WRITE_PERMISSION);
+
+	ifstream input_file(myfifo);
 	string line;
-
-	// Reading the first line which contains sorting type
-	getline(input_file, line);
-	if (line == DESCEND)
-		is_descended = true;
-	else
-		is_descended = false;
 
 	// Reading the second line which contains field names
 	getline(input_file, line);
