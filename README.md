@@ -1,4 +1,4 @@
-# Load-Balancer
+# Load Balancer
 
 Load Balancer is an educational project for the Operating System course held by Dr. Mahdi Kargahi.
 This project aims to filter files content and to sort them ascending/descending by the field attribute.
@@ -11,7 +11,7 @@ Pipes specify all the interconnections and message passing.
 (Unnamed pipes between LoadBalancer and workers, and Named pipe between workers and presenter).
 
 ## How to run it?
-Run the following commands for in the root directory of each process [LoadBalancer/Worker/Presenter]
+Run the following commands in the root directory of each process [LoadBalancer/Worker/Presenter]
 ```
 mkdir build
 cd build
